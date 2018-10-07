@@ -25,9 +25,18 @@ public:
 		RatioOfTotalPts
 	};
 
+	enum ComponentColor {
+		Black,
+		White
+	};
+
 	void setSmallComponentDetermination(SmallComponentDetermination newDetermination) {
 		determination = newDetermination;
 	};
+
+	void setComponentColor(ComponentColor color) {
+		componetColor = color;
+	}
 
 	void componentRemovement() {
 		markComponent();
@@ -61,8 +70,8 @@ public:
 			int32_t * pComponentIdRow = pixelComponentId.ptr<int32_t>(i);
 			for (int j = 0; j < nCols; ++j)
 			{
-				//Black point, we do not need to consider
-				if (*pRow == 0)
+				//We do not need to consider the component of given color
+				if (!isComponentColor(*pRow))
 				{
 					++pComponentIdRow;
 					++pRow;
@@ -97,7 +106,7 @@ public:
 						//int val_px_p = (int)img.at<T>(px_p) - depthVal;
 						if (px_p.x < nCols
 							&& px_p.y < nRows
-							&& img.at<T>(px_p) != 0
+							&& isComponentColor(img.at<T>(px_p))
 							&& pixelComponentId.at<int32_t>(px_p) == -1)
 						{
 							pixelComponentId.at<int32_t>(px_p) = -2;
@@ -107,7 +116,7 @@ public:
 						//T val_px_m = img.at<T>(px_m) - depthVal;
 						if (px_m.x >= 0
 							&& px_m.y >= 0
-							&& img.at<T>(px_m) != 0
+							&& isComponentColor(img.at<T>(px_m))
 							&& pixelComponentId.at<int32_t>(px_m) == -1)
 						{
 							pixelComponentId.at<int32_t>(px_m) = -2;
@@ -117,7 +126,7 @@ public:
 						//T val_py_p = img.at<T>(py_p) - depthVal;
 						if (py_p.x < nCols
 							&& py_p.y < nRows
-							&& img.at<T>(py_p) != 0
+							&& isComponentColor(img.at<T>(py_p))
 							&& pixelComponentId.at<int32_t>(py_p) == -1)
 						{
 							pixelComponentId.at<int32_t>(py_p) = -2;
@@ -127,7 +136,7 @@ public:
 						//T val_py_m = img.at<T>(py_m) - depthVal;
 						if (py_m.x >= 0
 							&& py_m.y >= 0
-							&& img.at<T>(py_m) != 0
+							&& isComponentColor(img.at<T>(py_m))
 							&& pixelComponentId.at<int32_t>(py_m) == -1)
 						{
 							pixelComponentId.at<int32_t>(py_m) = -2;
@@ -202,6 +211,16 @@ public:
 
 	DepthComponents & getDepthComponents() { return depthComponents; }
 private:
+	bool isComponentColor(T color) {
+		if (componetColor == White) {
+			return (color != 0);
+		}
+		else
+		{
+			return (color == 0);
+		}
+	}
+
 	cv::Mat img;
 	std::deque<cv::Point> neighborPoints;
 	cv::Mat pixelComponentId;
@@ -212,6 +231,7 @@ private:
 	int numMaxComponentPts;
 
 	SmallComponentDetermination determination = MinSize;
+	ComponentColor componetColor = White;
 
 	int connectionDistance = 1;
 };

@@ -18,6 +18,7 @@
 
 class Demo {};
 
+typedef ComponentMarker<uint8_t> CMarker;
 
 int main(int argc, char ** argv) {
 	if (argc < 2) {
@@ -33,14 +34,46 @@ int main(int argc, char ** argv) {
 	cv::waitKey(0);
 
 	cv::Mat imgFiltered;
-	cv::bilateralFilter(gMat, imgFiltered, 10, 50, 75);
+	gMat.copyTo(imgFiltered);
+
+	//for (int i = 0; i < 2; i++)
+	//{
+		//cv::bilateralFilter(gMat, imgFiltered, 20, 75, 75);
+
+	//}
 
 	cv::imshow("After Filter", imgFiltered);
 	cv::waitKey(0);
 
-	cv::threshold(imgFiltered, bMat, 105, 255, 0);
+	//cv::threshold(imgFiltered, bMat, 85, 255, 0);
+	cv::adaptiveThreshold(imgFiltered, bMat, 255, cv::ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 51, 0);
 
 	cv::imshow("BinaryImage", bMat);
+	cv::waitKey(0);
+
+	CMarker cMarkerBlack;
+	cMarkerBlack.setComponentColor(CMarker::Black);
+	cMarkerBlack.setInputBinaryImage(bMat);
+	cMarkerBlack.markComponent();
+	DepthComponents & depthComponentsBlack = cMarkerBlack.getDepthComponents();
+
+	printf("Number of black components:%d\n", depthComponentsBlack.size());
+	int i = 0;
+	for (DepthComponent & depthComponent : depthComponentsBlack)
+	{
+		if (depthComponent.size() > 100) {
+			continue;
+		}
+		for (int j = 0; j < depthComponent.size(); ++j) {
+			//inMat.at<cv::Vec3b>(depthComponent[j]) = cv::Vec3b(0, 255, 0);
+		}
+		for (int j = 0; j < depthComponent.size(); ++j) {
+			bMat.at<uint8_t>(depthComponent[j]) = 255;
+		}
+		++i;
+	}
+
+	cv::imshow("MarkBlackComponent", inMat);
 	cv::waitKey(0);
 
 	//Erosion
@@ -56,7 +89,7 @@ int main(int argc, char ** argv) {
 	cv::imshow("ErosionDemo", bMat);
 	cv::waitKey(0);
 
-	ComponentMarker<uint8_t> cMarker;
+	CMarker cMarker;
 	cMarker.setInputBinaryImage(bMat);
 	cMarker.markComponent();
 
@@ -66,12 +99,12 @@ int main(int argc, char ** argv) {
 	std::vector<cv::Scalar> colors = cGen.GetColors(depthComponents.size());
 
 	printf("Number of components:%d\n", depthComponents.size());
-	int i = 0;
+	i = 0;
 	for (DepthComponent & depthComponent : depthComponents)
 	{
-		//if (depthComponent.size() < 250) {
-		//	continue;
-		//}
+		if (depthComponent.size() > 4000 || depthComponent.size() < 20) {
+			continue;
+		}
 		for (int j = 0; j < depthComponent.size(); ++j) {
 			inMat.at<cv::Vec3b>(depthComponent[j]) = cv::Vec3b(colors[i][0], colors[i][1], colors[i][2]);
 		}
@@ -81,5 +114,5 @@ int main(int argc, char ** argv) {
 	cv::imshow("Components", inMat);
 	cv::waitKey(0);
 
-	
+	cv::imwrite("result.png", inMat);
 }

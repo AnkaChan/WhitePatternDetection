@@ -12,7 +12,6 @@
 #include <ctime>
 #include <random>
 
-
 class ColorGenerator {
 public:
 	ColorGenerator() : rng(12985) {};
